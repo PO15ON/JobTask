@@ -16,38 +16,32 @@ import android.widget.Toast;
 import com.example.ahmed.jobtask.data.Embedded;
 import com.example.ahmed.jobtask.data.Example;
 import com.example.ahmed.jobtask.data.Item;
+import com.example.ahmed.jobtask.data.Links;
+import com.example.ahmed.jobtask.data.Next;
+import com.example.ahmed.jobtask.data.Self;
 
-import java.util.ArrayList;
 import java.util.List;
 
-import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
 
 public class FrontEnd extends Fragment implements ProductAdapter.ItemClickListener{
 
-    public static final String TAG = "items";
-    static ProductAdapter productAdapter;
     RecyclerView recyclerView;
-    int page = 1;
+
     String[] names, codes;
-    Integer[] ids;
+    int[] ids;
     ImageView imageViews;
     Uri[] images;
     int imagesLength;
-    Double[] ratings;
+    double[] ratings;
     String Authorization;
-    ArrayList<String> nameList;
-    ArrayList<String> codeList;
-    ArrayList<Integer> idList;
-    ArrayList<Double> ratingList;
-    int sizeOfProducts = 0;
-    int numberOfPages;
+    static ProductAdapter productAdapter;
+
+    public static final String TAG = "items";
 
     /*START ONCREATE*/
-    ApiInterface apiService;
-    retrofit2.Call<Example> products;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -55,82 +49,58 @@ public class FrontEnd extends Fragment implements ProductAdapter.ItemClickListen
 
         Authorization = "Bearer " + MainActivity.accessToken;
 
-        apiService = ApiClient.getClient().create(ApiInterface.class);
-
-        nameList = new ArrayList<>();
-        codeList = new ArrayList<>();
-        idList = new ArrayList<>();
-        ratingList = new ArrayList<>();
-
-        loadFirstPage();
-        while (page <= numberOfPages) {
-            loadNextPage();
-        }
-
-        /*INITIALIZE ARRAYS*/
-        names = new String[sizeOfProducts];
-        ratings = new Double[sizeOfProducts];
-        codes = new String[sizeOfProducts];
-        ids = new Integer[sizeOfProducts];
-
-        names = nameList.toArray(new String[nameList.size()]);
-        ratings = ratingList.toArray(new Double[ratingList.size()]);
-        codes = codeList.toArray(new String[codeList.size()]);
-        ids = idList.toArray(new Integer[idList.size()]);
-
-        productAdapter.setData(names, ratings);
-//                recyclerView.setAdapter(productAdapter);
-        Toast.makeText(getContext(), "Found " + sizeOfProducts + " items", Toast.LENGTH_SHORT).show();
-    }
-
-    private void loadFirstPage() {
-
-        products = apiService.getAllProducts(Authorization, page++);
-
+        final ApiInterface apiService =
+                ApiClient.getClient().create(ApiInterface.class);
+        final retrofit2.Call<Example> products = apiService.getAllProducts(Authorization, 200);
         products.enqueue(new Callback<Example>() {
             @Override
             public void onResponse(retrofit2.Call<Example> call, Response<Example> response) {
 
 
                 // number of total pages
-//                numberOfPages = response.body().getPages();
-
+                int numberOfPages = response.body().getPages();
 
                 int size = response.body().getTotal();
 
-                sizeOfProducts += size;
+                /*INITIALIZE DATA ARRAYS*/
+                names = new String[size];
+                ratings = new double[size];
+                codes = new String[size];
+                ids = new int[size];
 
-//                Links links = response.body().getLinks();
+                Links links = response.body().getLinks();
+
+                for(int page = 0; page<numberOfPages; page++) {
+
+                    /*GET A REFERENCE FOR CURRENT PAGE*/
+                    Self self = links.getSelf();
+                    Log.i(TAG, "onResponse: self = " + self.getHref());
 
 
-//                    /*GET A REFERENCE FOR CURRENT PAGE*/
-//                    Self self = links.getSelf();
-//                    Log.i(TAG, "onResponse: self = " + self.getHref());
-                Embedded embedded;
-                List<Item> itemList;
-
-                //get items
-                embedded = response.body().getEmbedded();
-
-                itemList = embedded.getItems();
+                    //get items
+                    Embedded embedded = response.body().getEmbedded();
+                    List<Item> itemList = embedded.getItems();
 
 
                 /*Add data to the arrays*/
-                for (int i = 0; i < itemList.size(); i++) {
-                    nameList.add(itemList.get(i).getName());
-                    ratingList.add(itemList.get(i).getAverageRating());
-                    codeList.add(itemList.get(i).getCode());
-                    idList.add(itemList.get(i).getId());
-//                        Log.i("data", "onResponse: code = " + codes[i] + " id = " + ids[i] + " name = " + names[i]);
-                }
-
-//                    if (page != numberOfPages) {
-//                        loadNextPage();
-//                    }
+                    for (int i = 0; i < itemList.size(); i++) {
+                        names[i] = itemList.get(i).getName();
+                        ratings[i] = itemList.get(i).getAverageRating();
+                        codes[i] = itemList.get(i).getCode();
+                        ids[i] = itemList.get(i).getId();
+                        Log.i("data", "onResponse: code = " + codes[i] + " id = " + ids[i] + " name = " + names[i]);
+                    }
 
                     /*MOVE TO NEXT PAGE*/
 //                    String next = links.getNext().getHref();
 //                    self.setHref(next);
+                }
+
+
+                productAdapter.setData(names, ratings);
+//                recyclerView.setAdapter(productAdapter);
+                Toast.makeText(getContext(), "Found " + size + " items", Toast.LENGTH_SHORT).show();
+
 
             }
 
@@ -142,74 +112,13 @@ public class FrontEnd extends Fragment implements ProductAdapter.ItemClickListen
         });
     }
 
-    private void loadNextPage() {
-
-        final ApiInterface apiService =
-                ApiClient.getClient().create(ApiInterface.class);
-        final retrofit2.Call<Example> products = apiService.getAllProducts(Authorization, page++);
-        products.enqueue(new Callback<Example>() {
-            @Override
-            public void onResponse(Call<Example> call, Response<Example> response) {
-
-
-                // number of total pages
-//                numberOfPages = response.body().getPages();
-
-
-                int size = response.body().getTotal();
-
-                sizeOfProducts += size;
-
-                /*INITIALIZE DATA ARRAYS*/
-
-
-//                Links links = response.body().getLinks();
-
-
-//                    /*GET A REFERENCE FOR CURRENT PAGE*/
-//                    Self self = links.getSelf();
-//                    Log.i(TAG, "onResponse: self = " + self.getHref());
-                Embedded embedded;
-                List<Item> itemList;
-
-                //get items
-                embedded = response.body().getEmbedded();
-
-                itemList = embedded.getItems();
-
-
-                /*Add data to the arrays*/
-                for (int i = 0; i < itemList.size(); i++) {
-                    nameList.add(itemList.get(i).getName());
-                    ratingList.add(itemList.get(i).getAverageRating());
-                    codeList.add(itemList.get(i).getCode());
-                    idList.add(itemList.get(i).getId());
-//                    Log.i("data", "onResponse: code = " + codes[i] + " id = " + ids[i] + " name = " + names[i]);
-                }
-
-//                    if (page != numberOfPages) {
-//                        loadNextPage();
-//                    }
-
-                    /*MOVE TO NEXT PAGE*/
-//                    String next = links.getNext().getHref();
-//                    self.setHref(next);
-
-            }
-
-            @Override
-            public void onFailure(Call<Example> call, Throwable t) {
-
-            }
-        });
-    }
-
     /*END ONCREATE*/
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.front_fragment, container, false);
+
 
 
         recyclerView = (RecyclerView) view.findViewById(R.id.recycler_view);

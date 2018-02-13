@@ -28,7 +28,7 @@ public interface ApiInterface {
 
     @GET("v1/products")
     Call<Example> getAllProducts(@Header("Authorization") String accessToken,
-                                 @Query("page") int limit);
+                                 @Query("limit") int limit);
 
 
 

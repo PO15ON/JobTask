@@ -16,7 +16,7 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ViewHold
     private static final String TAG = "ProductAdapter";
     private String[] titles;
     private String[] imageArray;
-    private Double[] ratings;
+    private double[] ratings;
     private ItemClickListener mClickListener;
 
     @Override
@@ -52,7 +52,7 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ViewHold
         this.mClickListener = itemClickListener;
     }
 
-    public void setData(String[] newTitles, Double[] newRatings) {
+    public void setData(String[] newTitles, double[] newRatings) {
 
 //        imageArray = newImgUrls;
         titles = newTitles;
