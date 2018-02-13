@@ -6,7 +6,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class ApiClient {
     // TODO: 2/11/2018  
-    public static final String BASE_URL = "http://office.businessboomers.net:666/dresscode/web/app_dev.php/api";
+    public static final String BASE_URL = "http://office.businessboomers.net:666/dresscode/web/app_dev.php/api/";
     private static Retrofit retrofit = null;
 
 

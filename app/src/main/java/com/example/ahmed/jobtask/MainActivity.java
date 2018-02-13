@@ -1,25 +1,20 @@
 package com.example.ahmed.jobtask;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
+import android.support.design.widget.NavigationView;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
-import android.util.Log;
-import android.view.View;
-import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
-
-import java.util.List;
+import android.widget.Toast;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -28,13 +23,11 @@ import retrofit2.Response;
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
-    TextView textView;
-
     public static final String CLIENT_ID = "46v3htox13uookw4o8c8gs44oggocgos88804oggggkwss8o04";
     public static final String CLIENT_SECRET = "4jm5k8h9vxmokkssw4wkcsgs0cws0kow0w48s8gc80cwc404g0";
-
-    String accessToken;
     private static final String TAG = "accessToken";
+    static String accessToken;
+    TextView textView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,8 +38,6 @@ public class MainActivity extends AppCompatActivity
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
-
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -71,6 +62,13 @@ public class MainActivity extends AppCompatActivity
         getAccessToken.enqueue(new Callback<Credential>() {
             @Override
             public void onResponse(Call<Credential> call, final Response<Credential> response) {
+                if (response.code() != 200) {
+                    Log.d(TAG, "onResponse: error");
+                    Toast.makeText(MainActivity.this, "Error code: " + response.code(), Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                Log.d(TAG, "onResponse: rresults = " + response);
+                Log.d(TAG, "onResponse: message = " + response.message());
                 accessToken = response.body().getAccessToken();
                 Log.d(TAG, "onResponse: accessToken = " + accessToken);
 //                final String refreshToken = response.body().getRefreshToken();
@@ -95,7 +93,7 @@ public class MainActivity extends AppCompatActivity
                                 Log.d(TAG, "onResponse: new AccessToken = " + response1.body().getAccessToken());
 //                                response1.body().setAccessToken(response1.body().getAccessToken());
                                 accessToken = response1.body().getAccessToken();
-                                textView.append(accessToken + "\n");
+//                                textView.append(accessToken + "\n");
                             }
 
                             @Override
@@ -166,10 +164,17 @@ public class MainActivity extends AppCompatActivity
 
         if (id == R.id.nav_front) {
 
-            FrontEnd frontEnd = new FrontEnd();
-            FragmentTransaction transaction = fragmentManager.beginTransaction();
-            transaction.replace(R.id.frame, frontEnd);
-            transaction.commit();
+            if (accessToken != null) {
+
+                FrontEnd frontEnd = new FrontEnd();
+                FragmentTransaction transaction = fragmentManager.beginTransaction();
+                transaction.replace(R.id.frame, frontEnd);
+                transaction.commit();
+
+            } else {
+                Toast.makeText(this, "Wait for Auth.", Toast.LENGTH_SHORT).show();
+                return false;
+            }
 
         } else if (id == R.id.nav_back) {
 

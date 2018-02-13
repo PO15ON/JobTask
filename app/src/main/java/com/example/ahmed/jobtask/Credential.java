@@ -1,10 +1,6 @@
 package com.example.ahmed.jobtask;
 
-import android.util.Log;
-
 import com.google.gson.annotations.SerializedName;
-
-import static android.content.ContentValues.TAG;
 
 /**
  * Created by Ahmed on 2/11/2018.
@@ -67,7 +63,6 @@ public class Credential {
     }
 
     public String getRefreshToken() {
-        Log.d(TAG, "getRefreshToken: " + refreshToken);
         return refreshToken;
     }
 
