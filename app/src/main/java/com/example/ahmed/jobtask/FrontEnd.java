@@ -1,5 +1,6 @@
 package com.example.ahmed.jobtask;
 
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -13,12 +14,13 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.Toast;
 
-import com.example.ahmed.jobtask.data.Embedded;
-import com.example.ahmed.jobtask.data.Example;
-import com.example.ahmed.jobtask.data.Item;
-import com.example.ahmed.jobtask.data.Links;
-import com.example.ahmed.jobtask.data.Next;
-import com.example.ahmed.jobtask.data.Self;
+import com.example.ahmed.jobtask.credentials.ApiClient;
+import com.example.ahmed.jobtask.credentials.ApiInterface;
+import com.example.ahmed.jobtask.data.allProducts.AllProducts;
+import com.example.ahmed.jobtask.data.allProducts.Embedded;
+import com.example.ahmed.jobtask.data.allProducts.Item;
+import com.example.ahmed.jobtask.data.allProducts.Links;
+import com.example.ahmed.jobtask.data.allProducts.Self;
 
 import java.util.List;
 
@@ -47,16 +49,21 @@ public class FrontEnd extends Fragment implements ProductAdapter.ItemClickListen
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        Authorization = "Bearer " + MainActivity.accessToken;
+        Authorization = MainActivity.accessToken;
 
         final ApiInterface apiService =
                 ApiClient.getClient().create(ApiInterface.class);
-        final retrofit2.Call<Example> products = apiService.getAllProducts(Authorization, 200);
-        products.enqueue(new Callback<Example>() {
+        final retrofit2.Call<AllProducts> products = apiService.getAllProducts(Authorization, 200);
+        products.enqueue(new Callback<AllProducts>() {
             @Override
-            public void onResponse(retrofit2.Call<Example> call, Response<Example> response) {
+            public void onResponse(retrofit2.Call<AllProducts> call, Response<AllProducts> response) {
 
+                Log.i(TAG, "onResponse: response = " + response);
 
+                if (response.code() == 500) {
+                    Toast.makeText(getContext(), "Error: 500", Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 // number of total pages
                 int numberOfPages = response.body().getPages();
 
@@ -105,7 +112,7 @@ public class FrontEnd extends Fragment implements ProductAdapter.ItemClickListen
             }
 
             @Override
-            public void onFailure(retrofit2.Call<Example> call, Throwable t) {
+            public void onFailure(retrofit2.Call<AllProducts> call, Throwable t) {
 
                 Log.i(TAG, "onFailure: " + t.toString());
             }
@@ -138,7 +145,15 @@ public class FrontEnd extends Fragment implements ProductAdapter.ItemClickListen
     @Override
     public void onItemClick(View view, int position) {
         // TODO: 2/12/2018 open details
-        Toast.makeText(view.getContext(), "Item CLicked", Toast.LENGTH_SHORT).show();
+//        Toast.makeText(view.getContext(), "Item " + position + " CLicked", Toast.LENGTH_SHORT).show();
+
+        String code = codes[position];
+
+        /*OPENS DETAILS ACTIVITY PASSING THE PRODUCT CODE*/
+        Intent intent = new Intent(view.getContext(), ProductDetails.class);
+        intent.putExtra("code", code);
+
+        startActivity(intent);
     }
 
 

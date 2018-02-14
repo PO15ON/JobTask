@@ -13,8 +13,16 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.example.ahmed.jobtask.credentials.Account;
+import com.example.ahmed.jobtask.credentials.ApiClient;
+import com.example.ahmed.jobtask.credentials.ApiInterface;
+import com.example.ahmed.jobtask.credentials.Credential;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -27,7 +35,10 @@ public class MainActivity extends AppCompatActivity
     public static final String CLIENT_SECRET = "4jm5k8h9vxmokkssw4wkcsgs0cws0kow0w48s8gc80cwc404g0";
     private static final String TAG = "accessToken";
     static String accessToken;
+    static Integer adminId;
     TextView textView;
+    EditText username, email;
+    Button submitButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,6 +46,9 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
 
         textView = findViewById(R.id.text);
+        username = findViewById(R.id.username);
+        email = findViewById(R.id.email);
+        submitButton = findViewById(R.id.submit_button);
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -48,74 +62,131 @@ public class MainActivity extends AppCompatActivity
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-        /*Start Retrofit Request*/
-
-        final ApiInterface apiService =
-                ApiClient.getClient().create(ApiInterface.class);
-
-        Call<Credential> getAccessToken = apiService.getAccessToken(CLIENT_ID,
-                CLIENT_SECRET,
-                "password",
-                "api@example.com",
-                "api");
-
-        getAccessToken.enqueue(new Callback<Credential>() {
+        submitButton.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onResponse(Call<Credential> call, final Response<Credential> response) {
-                if (response.code() != 200) {
-                    Log.d(TAG, "onResponse: error");
-                    Toast.makeText(MainActivity.this, "Error code: " + response.code(), Toast.LENGTH_SHORT).show();
+            public void onClick(View view) {
+
+                final String usernameText, emailText;
+
+                usernameText = username.getText().toString();
+                emailText = email.getText().toString();
+
+                if (usernameText.isEmpty() || emailText.isEmpty()) {
+                    Toast.makeText(MainActivity.this, "please enter username and email", Toast.LENGTH_SHORT).show();
                     return;
                 }
-                Log.d(TAG, "onResponse: rresults = " + response);
-                Log.d(TAG, "onResponse: message = " + response.message());
-                accessToken = response.body().getAccessToken();
-                Log.d(TAG, "onResponse: accessToken = " + accessToken);
+                 /*Start Retrofit Request*/
+
+                final ApiInterface apiService =
+                        ApiClient.getClient().create(ApiInterface.class);
+
+                Call<Credential> getAccessToken = apiService.getAccessToken(CLIENT_ID,
+                        CLIENT_SECRET,
+                        "password",
+                        "api@example.com",
+                        "api");
+
+                getAccessToken.enqueue(new Callback<Credential>() {
+                    @Override
+                    public void onResponse(Call<Credential> call, final Response<Credential> response) {
+
+                        if (response.code() != 200 || response.code()==400) {
+                            Log.d(TAG, "onResponse1: error");
+                            Toast.makeText(MainActivity.this, "Error code: " + response.code(), Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+//                Log.i(TAG, "onResponse: id = " + response.body());
+                        Log.d(TAG, "onResponse: rresults = " + response);
+//                Log.d(TAG, "onResponse: message = " + response.message());
+                        accessToken = "Authorization: Bearer " + response.body().getAccessToken();
+
+                        Log.d(TAG, "onResponse: accessToken = " + accessToken);
 //                final String refreshToken = response.body().getRefreshToken();
+
+                /*CREATE USER ADMIN*/
+
+                        Call<Account> accountCall = apiService.createAdmin(accessToken, usernameText, emailText, "Ahmed.mido2010", "en_US", "true");
+                        accountCall.enqueue(new Callback<Account>() {
+                            @Override
+                            public void onResponse(Call<Account> call, Response<Account> response) {
+                                Log.i(TAG, "onResponse: headers = " + response.headers());
+                                if (accessToken == null) {
+                                    Log.i(TAG, "onResponse: need accessToken");
+                                    return;
+                                }
+                                Log.i(TAG, "onResponse: response = " + response);
+
+                                if (response.code() != 201 && response.code()==400) {
+                                    ProductDetails.errorCode = response.code();
+//                                    if(ProductDetails.mToast == null) ProductDetails.mToast.show();
+                                    return;
+                                } else if (response.code() == 400) {
+                            /*GET THE ADMIN*/
+                                    Log.i(TAG, "onResponse: 400");
+                                }
+                                adminId = response.body().getId();
+                                Log.i(TAG, "onResponse: adminId = " + adminId);
+                            }
+
+                            @Override
+                            public void onFailure(Call<Account> call, Throwable t) {
+
+                            }
+                        });
+
+                /*END CREATE USER ADMIN*/
 
                 /*Refresh the Token After it Expires*/
 
-                final Handler handler = new Handler();
-                final int delay = response.body().getExpiresIn()*1000; //milliseconds
+                        final Handler handler = new Handler();
+                        final int delay = response.body().getExpiresIn()*1000; //milliseconds
 
-                handler.postDelayed(new Runnable(){
-                    public void run(){
-                        //do something
-                        Call<Credential> refreshAccessToken1 = apiService.refreshAccessToken(CLIENT_ID,
-                                CLIENT_SECRET,
-                                "refresh_token",
-                                response.body().getRefreshToken());
+                        handler.postDelayed(new Runnable(){
+                            public void run(){
+                                //do something
+                                Call<Credential> refreshAccessToken1 = apiService.refreshAccessToken(CLIENT_ID,
+                                        CLIENT_SECRET,
+                                        "refresh_token",
+                                        response.body().getRefreshToken());
 
-                        refreshAccessToken1.enqueue(new Callback<Credential>() {
-                            @Override
-                            public void onResponse(Call<Credential> call, Response<Credential> response1) {
+                                refreshAccessToken1.enqueue(new Callback<Credential>() {
+                                    @Override
+                                    public void onResponse(Call<Credential> call, Response<Credential> response1) {
 //                                Log.d(TAG, "onResponse: AccessToken = " + accessToken);
-                                Log.d(TAG, "onResponse: new AccessToken = " + response1.body().getAccessToken());
+                                        Log.d(TAG, "onResponse: new AccessToken = " + response1.body().getAccessToken());
 //                                response1.body().setAccessToken(response1.body().getAccessToken());
-                                accessToken = response1.body().getAccessToken();
+                                        accessToken = response1.body().getAccessToken();
 //                                textView.append(accessToken + "\n");
-                            }
+                                    }
 
-                            @Override
-                            public void onFailure(Call<Credential> call, Throwable t) {
-                                Log.e(TAG, "onFailure: ", t);
+                                    @Override
+                                    public void onFailure(Call<Credential> call, Throwable t) {
+                                        Log.e(TAG, "onFailure: ", t);
+                                    }
+                                });
+                                handler.postDelayed(this, delay);
                             }
-                        });
-                        handler.postDelayed(this, delay);
-                    }
-                }, delay);
+                        }, delay);
 
                 /*End refresh AccessToken*/
 
-            }
+                    }
 
-            @Override
-            public void onFailure(Call<Credential> call, Throwable t) {
-                Log.e(TAG, "onFailure: " +  t.toString() );
+                    @Override
+                    public void onFailure(Call<Credential> call, Throwable t) {
+                        Log.e(TAG, "onFailure: " +  t.toString() );
+                    }
+                });
+
+        /*Start UI View*/
+                FragmentManager fragmentManager =getSupportFragmentManager();
+                FrontEnd frontEnd = new FrontEnd();
+                FragmentTransaction transaction = fragmentManager.beginTransaction();
+                transaction.replace(R.id.frame, frontEnd);
+                transaction.commit();
             }
         });
 
-        /*Start UI View*/
 
 
 

@@ -1,6 +1,8 @@
-package com.example.ahmed.jobtask;
+package com.example.ahmed.jobtask.credentials;
 
-import com.example.ahmed.jobtask.data.Example;
+import com.example.ahmed.jobtask.data.allProducts.AllProducts;
+import com.example.ahmed.jobtask.singleProduct.SingleProduct;
+import com.example.ahmed.jobtask.variants.Variants;
 
 import retrofit2.Call;
 import retrofit2.http.Field;
@@ -8,6 +10,7 @@ import retrofit2.http.FormUrlEncoded;
 import retrofit2.http.GET;
 import retrofit2.http.Header;
 import retrofit2.http.POST;
+import retrofit2.http.Path;
 import retrofit2.http.Query;
 
 
@@ -26,12 +29,29 @@ public interface ApiInterface {
                                     @Query("grant_type") String grantType,
                                     @Query("refresh_token") String refreshToken);
 
+    @FormUrlEncoded
+    @POST("v1/users/")
+    Call<Account> createAdmin(@Header("Authorization") String accessToken,
+                              @Field("username") String username,
+                              @Field("email") String email,
+                              @Field("plainPassword") String password,
+                              @Field("localeCode") String localeCode,
+                              @Field("enabled") String enabled);
+
+
     @GET("v1/products")
-    Call<Example> getAllProducts(@Header("Authorization") String accessToken,
-                                 @Query("limit") int limit);
+    Call<AllProducts> getAllProducts(@Header("Authorization") String accessToken,
+                                     @Query("limit") int limit);
 
 
+    @GET("v1/products/{code}")
+    Call<SingleProduct> getProduct(@Header("Authorization") String accessToken,
+                                   @Path("code") String code);
 
+    @GET("v1/products{productCode}/variants/{code}")
+    Call<Variants> getVariants(@Header("Authorization") String accessToken,
+                               @Path("productCode") String productCode,
+                               @Path("code") String variantCode);
 //    @GET("/dresscode/web/app_dev.php/api/v1/users/{id}")
 //    @Headers({
 //            "Content-Type:application/json"

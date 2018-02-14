@@ -1,4 +1,4 @@
-package com.example.ahmed.jobtask;
+package com.example.ahmed.jobtask.credentials;
 
 import com.google.gson.annotations.SerializedName;
 
@@ -9,6 +9,9 @@ import com.google.gson.annotations.SerializedName;
 public class Credential {
     @SerializedName("access_token")
     private String accessToken;
+
+    @SerializedName("id")
+    private String id;
 
     @SerializedName("expires_in")
     private int expiresIn;
@@ -22,12 +25,8 @@ public class Credential {
     @SerializedName("refresh_token")
     private String refreshToken;
 
-    public Credential(String accessToken, int expiresIn, String tokenType, boolean scope, String refreshToken) {
-        this.accessToken = accessToken;
-        this.expiresIn = expiresIn;
-        this.tokenType = tokenType;
-        this.scope = scope;
-        this.refreshToken = refreshToken;
+    public String getId() {
+        return id;
     }
 
     public String getAccessToken() {
