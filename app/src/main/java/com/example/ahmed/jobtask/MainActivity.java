@@ -36,19 +36,14 @@ public class MainActivity extends AppCompatActivity
     private static final String TAG = "accessToken";
     static String accessToken;
     static Integer adminId;
-    TextView textView;
-    EditText username, email;
-    Button submitButton;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        textView = findViewById(R.id.text);
-        username = findViewById(R.id.username);
-        email = findViewById(R.id.email);
-        submitButton = findViewById(R.id.submit_button);
+        /*START TOOLBAR*/
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -62,19 +57,8 @@ public class MainActivity extends AppCompatActivity
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-        submitButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
+        /*END TOOLBAR*/
 
-                final String usernameText, emailText;
-
-                usernameText = username.getText().toString();
-                emailText = email.getText().toString();
-
-                if (usernameText.isEmpty() || emailText.isEmpty()) {
-                    Toast.makeText(MainActivity.this, "please enter username and email", Toast.LENGTH_SHORT).show();
-                    return;
-                }
                  /*Start Retrofit Request*/
 
                 final ApiInterface apiService =
@@ -90,22 +74,26 @@ public class MainActivity extends AppCompatActivity
                     @Override
                     public void onResponse(Call<Credential> call, final Response<Credential> response) {
 
-                        if (response.code() != 200 || response.code()==400) {
+
+                        if (response.code() != 200 && response.code()!=400) {
                             Log.d(TAG, "onResponse1: error");
                             Toast.makeText(MainActivity.this, "Error code: " + response.code(), Toast.LENGTH_SHORT).show();
                             return;
+                        } else if(response.code()==400){ /*BAD REQUEST CODE*/
+                            Log.i(TAG, "onResponse: Error: " + response.code());
                         }
 //                Log.i(TAG, "onResponse: id = " + response.body());
-                        Log.d(TAG, "onResponse: rresults = " + response);
+                        Log.d(TAG, "onResponse: results (getAccessToken)= " + response);
 //                Log.d(TAG, "onResponse: message = " + response.message());
-                        accessToken = "Authorization: Bearer " + response.body().getAccessToken();
+
+                        accessToken = "Bearer " + response.body().getAccessToken();
 
                         Log.d(TAG, "onResponse: accessToken = " + accessToken);
 //                final String refreshToken = response.body().getRefreshToken();
 
                 /*CREATE USER ADMIN*/
 
-                        Call<Account> accountCall = apiService.createAdmin(accessToken, usernameText, emailText, "Ahmed.mido2010", "en_US", "true");
+                        Call<Account> accountCall = apiService.createAdmin(accessToken, "apasdi@example.com", "asadapi@example.com", "aasdapi", "en_US", true);
                         accountCall.enqueue(new Callback<Account>() {
                             @Override
                             public void onResponse(Call<Account> call, Response<Account> response) {
@@ -114,17 +102,40 @@ public class MainActivity extends AppCompatActivity
                                     Log.i(TAG, "onResponse: need accessToken");
                                     return;
                                 }
-                                Log.i(TAG, "onResponse: response = " + response);
+                                Log.i(TAG, "onResponse: response (createAdmin) = " + response);
+//                                if(response.body().getRoles().size()!=0)
+//                                    Log.i(TAG, "onResponse: roles1 = " + response.body().getRoles().get(0));
+//                                else
+//                                    Log.i(TAG, "onResponse: roles1 = null");
+                                Log.i("admin", "onResponse: response (accountCall)= " + response);
 
-                                if (response.code() != 201 && response.code()==400) {
-                                    ProductDetails.errorCode = response.code();
+                                if (response.code() != 201 && response.code()!=400) {
 //                                    if(ProductDetails.mToast == null) ProductDetails.mToast.show();
                                     return;
-                                } else if (response.code() == 400) {
+                                } else if (response.code() == 400) { /*BAD REQUEST CODE*/
                             /*GET THE ADMIN*/
-                                    Log.i(TAG, "onResponse: 400");
+
+                                    Call<Account> getAdminAccount = apiService.getAdmin(accessToken, "11");
+                                    getAdminAccount.enqueue(new Callback<Account>() {
+                                        @Override
+                                        public void onResponse(Call<Account> call, Response<Account> response) {
+                                            Log.i("admin", "onResponse: response1(getAdmin) = " + response);
+                                            adminId = response.body().getId();
+                                            Log.i(TAG, "onResponse: id = " + adminId);
+                                            response.body().setEnabled(true);
+                                            if(response.body().getRoles().size()!=0)
+                                                Log.i(TAG, "onResponse: roles = " + response.body().getRoles().get(0));
+                                            else
+                                                Log.i(TAG, "onResponse: roles = null");
+                                        }
+
+                                        @Override
+                                        public void onFailure(Call<Account> call, Throwable t) {
+
+                                        }
+                                    });
                                 }
-                                adminId = response.body().getId();
+//                                adminId = response.body().getId();
                                 Log.i(TAG, "onResponse: adminId = " + adminId);
                             }
 
@@ -170,6 +181,12 @@ public class MainActivity extends AppCompatActivity
 
                 /*End refresh AccessToken*/
 
+                        FragmentManager fragmentManager =getSupportFragmentManager();
+                        FrontEnd frontEnd = new FrontEnd();
+                        FragmentTransaction transaction = fragmentManager.beginTransaction();
+                        transaction.replace(R.id.frame, frontEnd);
+                        transaction.commit();
+
                     }
 
                     @Override
@@ -179,13 +196,8 @@ public class MainActivity extends AppCompatActivity
                 });
 
         /*Start UI View*/
-                FragmentManager fragmentManager =getSupportFragmentManager();
-                FrontEnd frontEnd = new FrontEnd();
-                FragmentTransaction transaction = fragmentManager.beginTransaction();
-                transaction.replace(R.id.frame, frontEnd);
-                transaction.commit();
-            }
-        });
+
+
 
 
 

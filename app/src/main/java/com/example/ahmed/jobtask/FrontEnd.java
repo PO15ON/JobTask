@@ -60,8 +60,8 @@ public class FrontEnd extends Fragment implements ProductAdapter.ItemClickListen
 
                 Log.i(TAG, "onResponse: response = " + response);
 
-                if (response.code() == 500) {
-                    Toast.makeText(getContext(), "Error: 500", Toast.LENGTH_SHORT).show();
+                if (response.code() != 200) {
+                    Toast.makeText(getContext(), "Error: " + response.code(), Toast.LENGTH_SHORT).show();
                     return;
                 }
                 // number of total pages
@@ -95,7 +95,7 @@ public class FrontEnd extends Fragment implements ProductAdapter.ItemClickListen
                         ratings[i] = itemList.get(i).getAverageRating();
                         codes[i] = itemList.get(i).getCode();
                         ids[i] = itemList.get(i).getId();
-                        Log.i("data", "onResponse: code = " + codes[i] + " id = " + ids[i] + " name = " + names[i]);
+//                        Log.i("data", "onResponse: code = " + codes[i] + " id = " + ids[i] + " name = " + names[i]);
                     }
 
                     /*MOVE TO NEXT PAGE*/
@@ -106,7 +106,7 @@ public class FrontEnd extends Fragment implements ProductAdapter.ItemClickListen
 
                 productAdapter.setData(names, ratings);
 //                recyclerView.setAdapter(productAdapter);
-                Toast.makeText(getContext(), "Found " + size + " items", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getActivity(), "Found " + size + " items", Toast.LENGTH_SHORT).show();
 
 
             }

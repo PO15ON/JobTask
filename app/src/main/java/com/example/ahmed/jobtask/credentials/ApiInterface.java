@@ -36,7 +36,11 @@ public interface ApiInterface {
                               @Field("email") String email,
                               @Field("plainPassword") String password,
                               @Field("localeCode") String localeCode,
-                              @Field("enabled") String enabled);
+                              @Field("enabled") boolean enabled);
+
+    @GET("v1/users/{id}")
+    Call<Account> getAdmin(@Header("Authorization") String accessToken,
+                           @Path("id") String id);
 
 
     @GET("v1/products")
@@ -48,7 +52,7 @@ public interface ApiInterface {
     Call<SingleProduct> getProduct(@Header("Authorization") String accessToken,
                                    @Path("code") String code);
 
-    @GET("v1/products{productCode}/variants/{code}")
+    @GET("v1/products/{productCode}/variants/{code}")
     Call<Variants> getVariants(@Header("Authorization") String accessToken,
                                @Path("productCode") String productCode,
                                @Path("code") String variantCode);
