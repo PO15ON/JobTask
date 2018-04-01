@@ -13,12 +13,11 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.ahmed.jobtask.admin.Admins;
+import com.example.ahmed.jobtask.admin.error.AdminError;
+import com.example.ahmed.jobtask.cart.error.ErrorUtils;
 import com.example.ahmed.jobtask.credentials.Account;
 import com.example.ahmed.jobtask.credentials.ApiClient;
 import com.example.ahmed.jobtask.credentials.ApiInterface;
@@ -35,13 +34,16 @@ public class MainActivity extends AppCompatActivity
     public static final String CLIENT_SECRET = "4jm5k8h9vxmokkssw4wkcsgs0cws0kow0w48s8gc80cwc404g0";
     private static final String TAG = "accessToken";
     static String accessToken;
-    static Integer adminId;
-
+    static Integer adminId = 2;
+    static Boolean admin;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        admin = false;
+
+        Toast.makeText(this, "Getting products list.. Please wait", Toast.LENGTH_LONG).show();
 
         /*START TOOLBAR*/
 
@@ -93,7 +95,7 @@ public class MainActivity extends AppCompatActivity
 
                 /*CREATE USER ADMIN*/
 
-                        Call<Account> accountCall = apiService.createAdmin(accessToken, "apasdi@example.com", "asadapi@example.com", "aasdapi", "en_US", true);
+                        Call<Account> accountCall = apiService.createAdmin(accessToken, "api@example.com", "api@example.com", "api1", "en_US", true);
                         accountCall.enqueue(new Callback<Account>() {
                             @Override
                             public void onResponse(Call<Account> call, Response<Account> response) {
@@ -102,41 +104,77 @@ public class MainActivity extends AppCompatActivity
                                     Log.i(TAG, "onResponse: need accessToken");
                                     return;
                                 }
-                                Log.i(TAG, "onResponse: response (createAdmin) = " + response);
+                                AdminError error = ErrorUtils.parseError(response);
+                                Log.i(TAG, "onResponse: error = " + error.getErrors().getChildren().getEmail().getErrors().get(0));
+                                if (!response.isSuccessful() && error.getErrors().getChildren().getEmail().getErrors().get(0).equals("This email is already used.")) {
+                                    // … and use it to show error information
+
+                                    /*GET ALL ADMINS TO GET THE REQUIRED ID*/
+                                    Call<Admins> getAdmins = apiService.getAllAdmins(accessToken);
+                                    getAdmins.enqueue(new Callback<Admins>() {
+                                        @Override
+                                        public void onResponse(Call<Admins> call, Response<Admins> response) {
+                                            Log.i(TAG, "onResponse: egtAdmins = " + response);
+                                            int size = response.body().getEmbedded().getItems().size();
+                                            for (int i = 0; i < size; i++) {
+                                                String email = response.body().getEmbedded().getItems().get(i).getEmail();
+                                                if (email.equals("api@example.com")) {
+                                                    adminId = response.body().getEmbedded().getItems().get(i).getId();
+                                                    Log.i(TAG, "onResponse: email equal id = " + adminId);
+                                                }
+                                            }
+                                        }
+
+                                        @Override
+                                        public void onFailure(Call<Admins> call, Throwable t) {
+
+                                        }
+                                    });
+
+                                    Log.i(TAG, "onResponse: " + response);
+                                    // … or just log the issue like we’re doing :)
+                                    Log.i(TAG, "onResponse: error (EMAIL)= " + error.getErrors().getChildren().getEmail().getErrors());
+                                    Log.i(TAG, "onResponse: error (USERNAME)= " + error.getErrors().getChildren().getUsername().getErrors());
+                                    Log.i(TAG, "onResponse: error (password)= " + error.getErrors().getChildren().getPlainPassword().getErrors());
+                                    Log.i(TAG, "onResponse: enabled = " + error.getErrors().getChildren().getEnabled().toString());
+                                } else {
+//                                    Log.i(TAG, "onResponse: response (createAdmin) = " + response);
+//                                adminId = response.body().getId();
 //                                if(response.body().getRoles().size()!=0)
 //                                    Log.i(TAG, "onResponse: roles1 = " + response.body().getRoles().get(0));
 //                                else
 //                                    Log.i(TAG, "onResponse: roles1 = null");
-                                Log.i("admin", "onResponse: response (accountCall)= " + response);
+//                                    Log.i("admin", "onResponse: response (accountCall)= " + response);
 
-                                if (response.code() != 201 && response.code()!=400) {
+                                    if (response.code() != 201 && response.code() != 400) {
 //                                    if(ProductDetails.mToast == null) ProductDetails.mToast.show();
-                                    return;
-                                } else if (response.code() == 400) { /*BAD REQUEST CODE*/
-                            /*GET THE ADMIN*/
+                                        return;
+                                    } else if (response.code() == 400) { /*BAD REQUEST CODE*/
+                                        /*GET THE ADMIN*/
 
-                                    Call<Account> getAdminAccount = apiService.getAdmin(accessToken, "11");
-                                    getAdminAccount.enqueue(new Callback<Account>() {
-                                        @Override
-                                        public void onResponse(Call<Account> call, Response<Account> response) {
-                                            Log.i("admin", "onResponse: response1(getAdmin) = " + response);
-                                            adminId = response.body().getId();
-                                            Log.i(TAG, "onResponse: id = " + adminId);
-                                            response.body().setEnabled(true);
-                                            if(response.body().getRoles().size()!=0)
-                                                Log.i(TAG, "onResponse: roles = " + response.body().getRoles().get(0));
-                                            else
-                                                Log.i(TAG, "onResponse: roles = null");
-                                        }
+                                        Call<Account> getAdminAccount = apiService.getAdmin(accessToken, adminId);
+                                        getAdminAccount.enqueue(new Callback<Account>() {
+                                            @Override
+                                            public void onResponse(Call<Account> call, Response<Account> response) {
+                                                Log.i("admin", "onResponse: response1(getAdmin) = " + response);
+                                                Log.i(TAG, "onResponse: id = " + adminId);
+                                                response.body().setEnabled(true);
+                                                if (response.body().getRoles().size() != 0)
+                                                    Log.i(TAG, "onResponse: roles = " + response.body().getRoles().get(0));
+                                                else
+                                                    Log.i(TAG, "onResponse: roles = null");
+                                            }
 
-                                        @Override
-                                        public void onFailure(Call<Account> call, Throwable t) {
+                                            @Override
+                                            public void onFailure(Call<Account> call, Throwable t) {
 
-                                        }
-                                    });
-                                }
+                                            }
+                                        });
+                                    }
 //                                adminId = response.body().getId();
-                                Log.i(TAG, "onResponse: adminId = " + adminId);
+                                    Log.i(TAG, "onResponse: adminId = " + adminId);
+                                }
+
                             }
 
                             @Override
@@ -248,6 +286,7 @@ public class MainActivity extends AppCompatActivity
         if (id == R.id.nav_front) {
 
             if (accessToken != null) {
+                admin = false;
 
                 FrontEnd frontEnd = new FrontEnd();
                 FragmentTransaction transaction = fragmentManager.beginTransaction();
@@ -260,7 +299,18 @@ public class MainActivity extends AppCompatActivity
             }
 
         } else if (id == R.id.nav_back) {
+            if (accessToken != null) {
+                admin = true;
 
+                FrontEnd frontEnd = new FrontEnd();
+                FragmentTransaction transaction = fragmentManager.beginTransaction();
+                transaction.replace(R.id.frame, frontEnd);
+                transaction.commit();
+
+            } else {
+                Toast.makeText(this, "Wait for Auth.", Toast.LENGTH_SHORT).show();
+                return false;
+            }
 
 
         }

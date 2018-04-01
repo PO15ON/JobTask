@@ -8,9 +8,20 @@ public class Value {
     @SerializedName("code")
     @Expose
     private String code;
+    @SerializedName("name")
+    @Expose
+    private String name;
     @SerializedName("translations")
     @Expose
     private Translations translations;
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
 
     public String getCode() {
         return code;

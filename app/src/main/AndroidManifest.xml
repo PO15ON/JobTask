@@ -21,9 +21,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
         <activity android:name=".ProductDetails" />
-        <activity android:name=".CheckOut"></activity>
+        <activity android:name=".CheckOut" />
+        <activity
+            android:name=".StockDialog"
+            android:theme="@style/Theme.AppCompat.Dialog" />
     </application>
 
 </manifest>

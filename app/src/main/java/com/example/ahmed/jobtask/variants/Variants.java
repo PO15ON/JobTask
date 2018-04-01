@@ -1,9 +1,11 @@
 
 package com.example.ahmed.jobtask.variants;
 
-import java.util.List;
+import com.example.ahmed.jobtask.allvariants.Translations;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+
+import java.util.List;
 
 public class Variants {
 
@@ -21,7 +23,7 @@ public class Variants {
     private Integer position;
     @SerializedName("translations")
     @Expose
-    private List<Object> translations = null;
+    private List<Translations> translations = null;
     @SerializedName("version")
     @Expose
     private Integer version;
@@ -73,11 +75,11 @@ public class Variants {
         this.position = position;
     }
 
-    public List<Object> getTranslations() {
+    public List<Translations> getTranslations() {
         return translations;
     }
 
-    public void setTranslations(List<Object> translations) {
+    public void setTranslations(List<Translations> translations) {
         this.translations = translations;
     }
 

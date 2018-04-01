@@ -1,14 +1,20 @@
 package com.example.ahmed.jobtask.credentials;
 
+import com.example.ahmed.jobtask.admin.Admins;
+import com.example.ahmed.jobtask.cart.Cart;
+import com.example.ahmed.jobtask.cart.channel.Channel;
 import com.example.ahmed.jobtask.data.allProducts.AllProducts;
 import com.example.ahmed.jobtask.singleProduct.SingleProduct;
 import com.example.ahmed.jobtask.variants.Variants;
+import com.example.ahmed.jobtask.variants.update.PatchVariants;
 
 import retrofit2.Call;
+import retrofit2.http.Body;
 import retrofit2.http.Field;
 import retrofit2.http.FormUrlEncoded;
 import retrofit2.http.GET;
 import retrofit2.http.Header;
+import retrofit2.http.PATCH;
 import retrofit2.http.POST;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
@@ -38,9 +44,13 @@ public interface ApiInterface {
                               @Field("localeCode") String localeCode,
                               @Field("enabled") boolean enabled);
 
+    @GET("v1/users")
+    Call<Admins> getAllAdmins(@Header("Authorization") String accessToken);
+
+
     @GET("v1/users/{id}")
     Call<Account> getAdmin(@Header("Authorization") String accessToken,
-                           @Path("id") String id);
+                           @Path("id") Integer id);
 
 
     @GET("v1/products")
@@ -56,6 +66,41 @@ public interface ApiInterface {
     Call<Variants> getVariants(@Header("Authorization") String accessToken,
                                @Path("productCode") String productCode,
                                @Path("code") String variantCode);
+
+    @GET("v1/products/{productCode}/variants/{code}")
+    Call<PatchVariants> getPatchVariants(@Header("Authorization") String accessToken,
+                                         @Path("productCode") String productCode,
+                                         @Path("code") String variantCode);
+
+    @GET("v1/products/{productCode}/variants")
+    Call<com.example.ahmed.jobtask.allvariants.Variants> getAllVariants(@Header("Authorization") String accessToken,
+                                                                        @Path("productCode") String productCode);
+
+    @PATCH("v1/products/{productCode}/ariants/{code}")
+    Call<Variants> updateVariant(@Header("Authorization") String accessToken,
+                                 @Path("productCode") String productCode,
+                                 @Path("code") String variantCode,
+                                 @Body PatchVariants patchVariants);
+
+
+    @POST("v1/carts/")
+    @FormUrlEncoded
+    Call<Cart> createCart(@Header("Authorization") String accessToken,
+                          @Field("customer") String email,
+                          @Field("channel") String channel,
+                          @Field("localeCode") String localeCode);
+
+
+    @GET("v1/channels")
+    Call<Channel> createChannel(@Header("Authorization") String accessToken);
+
+    @GET("v1/channels/{code}")
+    Call<Channel> getChannel(@Header("Authorization") String accessToken,
+                             @Path("code") String channelCode);
+
+
+
+
 //    @GET("/dresscode/web/app_dev.php/api/v1/users/{id}")
 //    @Headers({
 //            "Content-Type:application/json"
